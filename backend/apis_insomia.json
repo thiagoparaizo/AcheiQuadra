@@ -1,0 +1,435 @@
+{
+    "_type": "export",
+    "__export_format": 4,
+    "__export_date": "2023-07-20T12:00:00.000Z",
+    "__export_source": "insomnia.desktop.app:v2023.5.8",
+    "resources": [
+        {
+            "_id": "req_auth_register",
+            "parentId": "fld_auth",
+            "name": "Registrar Usuário",
+            "method": "POST",
+            "url": "{{ base_url }}/auth/register",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"username\": \"novousuario\",\n  \"email\": \"usuario@example.com\",\n  \"password\": \"senhasegura123\",\n  \"first_name\": \"Nome\",\n  \"last_name\": \"Sobrenome\",\n  \"phone\": \"11987654321\",\n  \"cpf\": \"12345678901\",\n  \"birth_date\": \"1990-01-01\",\n  \"role\": \"customer\"\n}"
+            },
+            "description": "Registrar um novo usuário"
+        },
+        {
+            "_id": "req_auth_login",
+            "parentId": "fld_auth",
+            "name": "Login",
+            "method": "POST",
+            "url": "{{ base_url }}/auth/login",
+            "body": {
+                "mimeType": "application/x-www-form-urlencoded",
+                "params": [
+                    {
+                        "name": "username",
+                        "value": "usuario@example.com"
+                    },
+                    {
+                        "name": "password",
+                        "value": "senhasegura123"
+                    }
+                ]
+            },
+            "description": "Login com email/senha"
+        },
+        {
+            "_id": "req_auth_verify_email",
+            "parentId": "fld_auth",
+            "name": "Verificar Email",
+            "method": "POST",
+            "url": "{{ base_url }}/auth/verify-email/:token",
+            "description": "Verificar email com token"
+        },
+        {
+            "_id": "req_auth_forgot_password",
+            "parentId": "fld_auth",
+            "name": "Esqueci a Senha",
+            "method": "POST",
+            "url": "{{ base_url }}/auth/forgot-password",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"email\": \"usuario@example.com\"\n}"
+            },
+            "description": "Solicitar recuperação de senha"
+        },
+        {
+            "_id": "req_auth_reset_password",
+            "parentId": "fld_auth",
+            "name": "Redefinir Senha",
+            "method": "POST",
+            "url": "{{ base_url }}/auth/reset-password/:token",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"password\": \"novasenha123\"\n}"
+            },
+            "description": "Redefinir senha com token"
+        },
+        {
+            "_id": "req_users_me",
+            "parentId": "fld_users",
+            "name": "Obter Meus Dados",
+            "method": "GET",
+            "url": "{{ base_url }}/users/me",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "description": "Obter dados do usuário atual"
+        },
+        {
+            "_id": "req_users_update_me",
+            "parentId": "fld_users",
+            "name": "Atualizar Meus Dados",
+            "method": "PUT",
+            "url": "{{ base_url }}/users/me",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"username\": \"novousuario\",\n  \"email\": \"novoemail@example.com\",\n  \"first_name\": \"Novo Nome\",\n  \"last_name\": \"Novo Sobrenome\",\n  \"phone\": \"11999999999\",\n  \"password\": \"novasenha123\"\n}"
+            },
+            "description": "Atualizar dados do usuário atual"
+        },
+        {
+            "_id": "req_admin_users",
+            "parentId": "fld_admin",
+            "name": "Listar Usuários",
+            "method": "GET",
+            "url": "{{ base_url }}/admin/users",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ admin_token }}"
+            },
+            "description": "Listar todos os usuários (somente admin)",
+            "parameters": [
+                {
+                    "name": "page",
+                    "value": "1"
+                },
+                {
+                    "name": "items_per_page",
+                    "value": "20"
+                },
+                {
+                    "name": "role",
+                    "value": "customer"
+                }
+            ]
+        },
+        {
+            "_id": "req_admin_users_id",
+            "parentId": "fld_admin",
+            "name": "Obter Usuário",
+            "method": "GET",
+            "url": "{{ base_url }}/admin/users/:user_id",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ admin_token }}"
+            },
+            "description": "Obter detalhes de um usuário específico (somente admin)"
+        },
+        {
+            "_id": "req_admin_users_id_role",
+            "parentId": "fld_admin",
+            "name": "Atualizar Role",
+            "method": "PUT",
+            "url": "{{ base_url }}/admin/users/:user_id/role",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ admin_token }}"
+            },
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"role\": \"admin\"\n}"
+            },
+            "description": "Atualizar papel/role de um usuário (somente admin)"
+        },
+        {
+            "_id": "req_arenas_create",
+            "parentId": "fld_arenas",
+            "name": "Criar Arena",
+            "method": "POST",
+            "url": "{{ base_url }}/arenas/",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ admin_token }}"
+            },
+            "body": {
+                "mimeType": "multipart/form-data",
+                "params": [
+                    {
+                        "name": "arena_data",
+                        "value": "{\n  \"name\": \"Nova Arena\",\n  \"description\": \"Descrição da arena\",\n  \"address\": {\n    \"street\": \"Rua Exemplo\",\n    \"number\": \"123\",\n    \"neighborhood\": \"Centro\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zip_code\": \"01001000\"\n  },\n  \"business_hours\": {\n    \"monday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"tuesday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"wednesday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"thursday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"friday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"saturday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}],\n    \"sunday\": [{\"start\": \"08:00\", \"end\": \"22:00\"}]\n  },\n  \"amenities\": [\"vestiário\", \"lanchonete\"],\n  \"owner_id\": \"ID_DO_PROPIETARIO\"\n}"
+                    }
+                ]
+            },
+            "description": "Criar nova arena (somente admin pode criar)"
+        },
+        {
+            "_id": "req_arenas_search",
+            "parentId": "fld_arenas",
+            "name": "Buscar Arenas",
+            "method": "GET",
+            "url": "{{ base_url }}/arenas/",
+            "description": "Buscar arenas com filtros",
+            "parameters": [
+                {
+                    "name": "name",
+                    "value": "Arena"
+                },
+                {
+                    "name": "city",
+                    "value": "São Paulo"
+                },
+                {
+                    "name": "page",
+                    "value": "1"
+                }
+            ]
+        },
+        {
+            "_id": "req_arenas_id",
+            "parentId": "fld_arenas",
+            "name": "Obter Arena",
+            "method": "GET",
+            "url": "{{ base_url }}/arenas/:arena_id",
+            "description": "Obter detalhes de uma arena"
+        },
+        {
+            "_id": "req_arenas_update",
+            "parentId": "fld_arenas",
+            "name": "Atualizar Arena",
+            "method": "PUT",
+            "url": "{{ base_url }}/arenas/:arena_id",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "body": {
+                "mimeType": "multipart/form-data",
+                "params": [
+                    {
+                        "name": "arena_data",
+                        "value": "{\n  \"name\": \"Arena Atualizada\",\n  \"description\": \"Nova descrição\"\n}"
+                    }
+                ]
+            },
+            "description": "Atualizar arena (somente dono ou admin)"
+        },
+        {
+            "_id": "req_courts_search",
+            "parentId": "fld_courts",
+            "name": "Buscar Quadras",
+            "method": "GET",
+            "url": "{{ base_url }}/courts",
+            "description": "Buscar quadras disponíveis com filtros",
+            "parameters": [
+                {
+                    "name": "court_type",
+                    "value": "futebol"
+                },
+                {
+                    "name": "city",
+                    "value": "São Paulo"
+                }
+            ]
+        },
+        {
+            "_id": "req_courts_id",
+            "parentId": "fld_courts",
+            "name": "Obter Quadra",
+            "method": "GET",
+            "url": "{{ base_url }}/courts/:court_id",
+            "description": "Obter detalhes de uma quadra específica"
+        },
+        {
+            "_id": "req_courts_availability",
+            "parentId": "fld_courts",
+            "name": "Disponibilidade",
+            "method": "GET",
+            "url": "{{ base_url }}/courts/:court_id/availability",
+            "description": "Obter disponibilidade de horários de uma quadra",
+            "parameters": [
+                {
+                    "name": "start_date",
+                    "value": "2023-07-20"
+                }
+            ]
+        },
+        {
+            "_id": "req_bookings_create",
+            "parentId": "fld_bookings",
+            "name": "Criar Reserva",
+            "method": "POST",
+            "url": "{{ base_url }}/bookings/",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"court_id\": \"ID_DA_QUADRA\",\n  \"booking_type\": \"single\",\n  \"timeslot\": {\n    \"date\": \"2023-07-20\",\n    \"start_time\": \"10:00\",\n    \"end_time\": \"12:00\"\n  },\n  \"extra_services\": [\n    {\n      \"service_id\": \"ID_DO_SERVICO\",\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "description": "Criar um novo agendamento"
+        },
+        {
+            "_id": "req_bookings_user",
+            "parentId": "fld_bookings",
+            "name": "Minhas Reservas",
+            "method": "GET",
+            "url": "{{ base_url }}/bookings/user/me",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "description": "Obter agendamentos do usuário logado"
+        },
+        {
+            "_id": "req_bookings_id",
+            "parentId": "fld_bookings",
+            "name": "Obter Reserva",
+            "method": "GET",
+            "url": "{{ base_url }}/bookings/:booking_id",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "description": "Obter detalhes de uma reserva específica"
+        },
+        {
+            "_id": "req_payments_create",
+            "parentId": "fld_payments",
+            "name": "Criar Pagamento",
+            "method": "POST",
+            "url": "{{ base_url }}/payments/",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"booking_id\": \"ID_DA_RESERVA\",\n  \"amount\": 100.00,\n  \"payment_method\": \"pix\"\n}"
+            },
+            "description": "Iniciar um novo pagamento"
+        },
+        {
+            "_id": "req_payments_id",
+            "parentId": "fld_payments",
+            "name": "Obter Pagamento",
+            "method": "GET",
+            "url": "{{ base_url }}/payments/:payment_id",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "description": "Obter detalhes de um pagamento"
+        },
+        {
+            "_id": "req_reviews_create",
+            "parentId": "fld_reviews",
+            "name": "Criar Avaliação",
+            "method": "POST",
+            "url": "{{ base_url }}/reviews/",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n  \"booking_id\": \"ID_DA_RESERVA\",\n  \"rating\": 5,\n  \"comment\": \"Ótima experiência\",\n  \"aspects\": {\n    \"infraestrutura\": 5,\n    \"atendimento\": 5\n  }\n}"
+            },
+            "description": "Criar uma avaliação para uma reserva concluída"
+        },
+        {
+            "_id": "req_reviews_user",
+            "parentId": "fld_reviews",
+            "name": "Minhas Avaliações",
+            "method": "GET",
+            "url": "{{ base_url }}/reviews/user/me",
+            "authentication": {
+                "type": "bearer",
+                "token": "{{ token }}"
+            },
+            "description": "Obter avaliações feitas pelo usuário logado"
+        },
+        {
+            "_id": "req_reviews_arena",
+            "parentId": "fld_reviews",
+            "name": "Avaliações da Arena",
+            "method": "GET",
+            "url": "{{ base_url }}/reviews/arena/:arena_id",
+            "description": "Obter avaliações de uma arena específica"
+        },
+        {
+            "_id": "env_base",
+            "parentId": "env",
+            "name": "Base Environment",
+            "data": {
+                "base_url": "http://localhost:8000",
+                "token": "SEU_TOKEN_JWT_AQUI",
+                "admin_token": "SEU_TOKEN_ADMIN_AQUI"
+            }
+        },
+        {
+            "_id": "fld_auth",
+            "parentId": "wrk_01",
+            "name": "Autenticação",
+            "description": "Endpoints de autenticação e usuários"
+        },
+        {
+            "_id": "fld_users",
+            "parentId": "wrk_01",
+            "name": "Usuários",
+            "description": "Endpoints de gerenciamento de usuários"
+        },
+        {
+            "_id": "fld_admin",
+            "parentId": "wrk_01",
+            "name": "Admin",
+            "description": "Endpoints administrativos"
+        },
+        {
+            "_id": "fld_arenas",
+            "parentId": "wrk_01",
+            "name": "Arenas",
+            "description": "Endpoints de gerenciamento de arenas"
+        },
+        {
+            "_id": "fld_courts",
+            "parentId": "wrk_01",
+            "name": "Quadras",
+            "description": "Endpoints de gerenciamento de quadras"
+        },
+        {
+            "_id": "fld_bookings",
+            "parentId": "wrk_01",
+            "name": "Reservas",
+            "description": "Endpoints de gerenciamento de reservas"
+        },
+        {
+            "_id": "fld_payments",
+            "parentId": "wrk_01",
+            "name": "Pagamentos",
+            "description": "Endpoints de gerenciamento de pagamentos"
+        },
+        {
+            "_id": "fld_reviews",
+            "parentId": "wrk_01",
+            "name": "Avaliações",
+            "description": "Endpoints de gerenciamento de avaliações"
+        },
+        {
+            "_id": "wrk_01",
+            "name": "API Arena Esportiva",
+            "description": "API completa para gerenciamento de arenas esportivas",
+            "scope": "designer"
+        }
+    ]
+}
