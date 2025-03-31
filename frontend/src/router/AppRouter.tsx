@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Importar componentes de páginas
 // Páginas principais
 import CourtsListingPage from '../pages/courts/CourtsListingPage';
 import CourtDetailPage from '../pages/courts/CourtDetailPage';
@@ -19,9 +18,37 @@ import RegisterPage from '../pages/auth/RegisterPage';
 import UserProfilePage from '../pages/profile/UserProfilePage';
 import UserBookingsPage from '../pages/profile/UserBookingsPage';
 
-// Importar componente de layout
+// Páginas administrativas
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import AdminUsersPage from '../pages/admin/AdminUsersPage';
+import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage';
+import AdminArenasPage from '../pages/admin/AdminArenasPage';
+import AdminEditArenaPage from '../pages/admin/AdminEditArenaPage';
+import AdminCreateArenaPage from '../pages/admin/AdminCreateArenaPage';
+import AdminCourtsPage from '../pages/admin/AdminCourtsPage';
+import AdminBookingsPage from '../pages/admin/AdminBookingsPage';
+import AdminBookingDetailsPage from '../pages/admin/AdminBookingDetailsPage';
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+
+// Layouts
 import MainLayout from '../layouts/MainLayout';
+import AdminLayout from '../layouts/AdminLayout';
+
+// Contexto de autenticação
 import { AuthProvider } from '../contexts/AuthContext';
+
+// Componente para rota protegida que requer papel específico
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  roles: string[];
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
+  // Componente fictício para demonstrar o conceito
+  // Em uma implementação real, você verificaria se o usuário está autenticado
+  // e se seu papel está na lista de papéis permitidos
+  return <>{children}</>;
+};
 
 const AppRouter: React.FC = () => {
   return (
@@ -52,12 +79,23 @@ const AppRouter: React.FC = () => {
             {/* Rotas de perfil */}
             <Route path="/profile" element={<UserProfilePage />} />
             <Route path="/profile/bookings" element={<UserBookingsPage />} />
+          </Route>
 
-            {/* Adicionar mais rotas conforme necessário:
-                - /profile/payments (histórico de pagamentos)
-                - /profile/change-password (alterar senha)
-                - /forgot-password, etc.
-            */}
+          {/* Rotas administrativas */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="users/:id" element={<AdminUserDetailPage />} />
+            {/* Rotas de administração */}
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/arenas" element={<AdminArenasPage />} />
+            <Route path="/admin/arenas/:id/edit" element={<AdminEditArenaPage />} />
+            <Route path="/admin/arenas/new" element={<AdminCreateArenaPage />} />
+            <Route path="/admin/arenas/:id/courts" element={<AdminCourtsPage />} />
+            <Route path="/admin/bookings" element={<AdminBookingsPage />} />
+            <Route path="/admin/bookings/:id" element={<AdminBookingDetailsPage />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
 
           {/* Rota 404 para páginas não encontradas */}

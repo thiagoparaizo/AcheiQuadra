@@ -1,7 +1,20 @@
 // src/layouts/MainLayout.tsx
 import React from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogIn, MapPin, Grid, LogOut, Calendar, Settings } from 'lucide-react';
+import {
+  Menu,
+  X,
+  User,
+  LogIn,
+  MapPin,
+  Grid,
+  LogOut,
+  Calendar,
+  Settings,
+  BarChart2,
+  Users,
+  Building,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const MainLayout: React.FC = () => {
@@ -203,6 +216,52 @@ const MainLayout: React.FC = () => {
                       <Settings size={18} className="mr-1" />
                       Gerenciar Arena
                     </Link>
+                  )}
+                  {user?.role === 'admin' && (
+                    <>
+                      <div className="border-t my-1"></div>
+                      <p className="px-4 py-1 text-xs text-gray-500 font-semibold">ADMINISTRAÇÃO</p>
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <BarChart2 size={14} className="mr-2" />
+                        Dashboard
+                      </Link>
+                      <Link
+                        to="/admin/users"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Users size={14} className="mr-2" />
+                        Usuários
+                      </Link>
+                      <Link
+                        to="/admin/arenas"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Building size={14} className="mr-2" />
+                        Arenas
+                      </Link>
+                      <Link
+                        to="/admin/bookings"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Calendar size={14} className="mr-2" />
+                        Reservas
+                      </Link>
+                      <Link
+                        to="/admin/settings"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Settings size={14} className="mr-2" />
+                        Configurações
+                      </Link>
+                    </>
                   )}
                   <button
                     onClick={() => {
