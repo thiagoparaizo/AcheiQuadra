@@ -21,7 +21,7 @@ async def create_payment(
     current_user = Depends(get_current_active_user)
 ):
     """Iniciar um novo pagamento"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar a reserva
     booking = await db.db.bookings.find_one({"_id": ObjectId(payment_data.booking_id)})
@@ -271,7 +271,7 @@ async def get_payment(
     current_user = Depends(get_current_active_user)
 ):
     """Obter detalhes de um pagamento"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar o pagamento
     payment = await db.db.payments.find_one({"_id": ObjectId(payment_id)})

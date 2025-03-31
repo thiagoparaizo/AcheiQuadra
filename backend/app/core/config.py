@@ -10,15 +10,15 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 dias
     
     # CORS
-    CORS_ORIGINS: List[AnyHttpUrl] = []
+    CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
-    @validator("CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    # @validator("CORS_ORIGINS", pre=True)
+    # def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    #     if isinstance(v, str) and not v.startswith("["):
+    #         return [i.strip() for i in v.split(",")]
+    #     elif isinstance(v, (list, str)):
+    #         return v
+    #     raise ValueError(v)
 
     # MongoDB
     MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27024")

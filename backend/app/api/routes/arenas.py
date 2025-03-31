@@ -277,7 +277,7 @@ async def update_arena(
             )
         
         # Verificar permissões
-        user_id = str(current_user["_id"])
+        user_id = str(current_user["id"])
         is_owner = arena["owner_id"] == user_id
         is_admin = current_user.get("role") == "admin"
         
@@ -497,7 +497,7 @@ async def deactivate_arena(
         )
     
     # Verificar permissões
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     is_owner = arena["owner_id"] == user_id
     is_admin = current_user.get("role") == "admin"
     
@@ -530,7 +530,7 @@ async def activate_arena(
         )
     
     # Verificar permissões
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     is_owner = arena["owner_id"] == user_id
     is_admin = current_user.get("role") == "admin"
     

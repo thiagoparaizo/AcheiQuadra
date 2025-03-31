@@ -299,7 +299,7 @@ async def get_user_bookings(
     items_per_page: int = 20
 ):
     """Obter agendamentos do usuário logado"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.id)
     
     # Construir filtro
     filter_query = {"user_id": user_id}
@@ -346,7 +346,7 @@ async def get_arena_bookings(
     items_per_page: int = 20
 ):
     """Obter agendamentos de uma arena (somente para donos da arena)"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Verificar se o usuário tem permissão (dono da arena ou admin)
     arena = await db.db.arenas.find_one({"_id": ObjectId(arena_id)})
@@ -408,7 +408,7 @@ async def update_booking_status(
     current_user = Depends(get_current_active_user)
 ):
     """Atualizar status de um agendamento (confirmar, cancelar, etc)"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar a reserva
     booking = await db.db.bookings.find_one({"_id": ObjectId(booking_id)})
@@ -526,7 +526,7 @@ async def cancel_booking(
     current_user = Depends(get_current_active_user)
 ):
     """Cancelar um agendamento"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar a reserva
     booking = await db.db.bookings.find_one({"_id": ObjectId(booking_id)})
@@ -655,7 +655,7 @@ async def get_booking(
     current_user = Depends(get_current_active_user)
 ):
     """Obter detalhes de uma reserva específica"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar a reserva
     booking = await db.db.bookings.find_one({"_id": ObjectId(booking_id)})
@@ -720,7 +720,7 @@ async def get_booking_payment_status(
     current_user = Depends(get_current_active_user)
 ):
     """Obter status de pagamento de uma reserva"""
-    user_id = str(current_user["_id"])
+    user_id = str(current_user["id"])
     
     # Buscar a reserva
     booking = await db.db.bookings.find_one({"_id": ObjectId(booking_id)})

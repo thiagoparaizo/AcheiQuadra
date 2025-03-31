@@ -100,7 +100,7 @@ async def update_user_role(
         )
     
     # Não permitir alterar o papel do próprio usuário admin
-    if str(user["_id"]) == str(current_user["_id"]) and user.get("role") == "admin" and new_role != "admin":
+    if str(user["_id"]) == str(current_user["id"]) and user.get("role") == "admin" and new_role != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Não é permitido remover seu próprio papel de administrador"
@@ -151,7 +151,7 @@ async def deactivate_user(
         )
     
     # Não permitir desativar o próprio usuário admin
-    if str(user["_id"]) == str(current_user["_id"]) and user.get("role") == "admin":
+    if str(user["_id"]) == str(current_user["id"]) and user.get("role") == "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Não é permitido desativar sua própria conta de administrador"
