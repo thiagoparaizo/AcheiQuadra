@@ -241,13 +241,22 @@ async def get_court_availability(
         time_slots = []
         
         for hour_range in day_hours:
-            start_time = hour_range["start"]
-            end_time = hour_range["end"]
+            start_time_str = hour_range["start"]  # '07:00'
+            end_time_str = hour_range["end"]     # '23:00'
+            
+            # Converter strings para objetos time
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = datetime.strptime(end_time_str, "%H:%M").time()
             
             # Criar slots de 1 hora
             current_time = start_time
             while current_time < end_time:
-                next_time = (datetime.combine(date.min, current_time) + timedelta(hours=1)).time()
+                try:
+                    next_time = (datetime.combine(date.min, current_time) + timedelta(hours=1)).time()
+                    # ... resto do seu código ...
+                    current_time = next_time
+                except Exception as e:
+                    raise
                 
                 # Verificar se este slot está livre
                 is_available = True

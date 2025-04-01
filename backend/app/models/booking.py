@@ -117,3 +117,36 @@ class BookingCancellation(MongoBaseModel):
     """Modelo para cancelamento de reserva."""
     reason: Optional[str] = None
     request_refund: bool = False
+    
+class BookingUserInfo(BaseModel):
+    id: str
+    name: str
+    email: str
+    phone: Optional[str] = None
+    username: Optional[str] = None
+
+class BookingCourtInfo(BaseModel):
+    id: str
+    name: str
+    type: str
+    cover_image: Optional[str] = None
+
+class BookingArenaInfo(BaseModel):
+    id: str
+    name: str
+    city: Optional[str] = None
+    neighborhood: Optional[str] = None
+
+class BookingWithDetails(Booking):
+    user: BookingUserInfo
+    court: BookingCourtInfo
+    arena: BookingArenaInfo
+    payment_status: Optional[str] = None
+    can_cancel: Optional[bool] = None
+
+class PaginatedBookingsResponse(BaseModel):
+    bookings: List[BookingWithDetails]
+    total_pages: int
+    current_page: int
+    total_items: int
+    items_per_page: int

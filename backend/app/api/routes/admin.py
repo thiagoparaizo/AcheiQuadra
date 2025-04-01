@@ -3,12 +3,15 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
+from pydantic import ValidationError
 
 from app.core.security import get_current_user, get_current_admin_user
 from app.db.database import db
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserUpdate
 from app.models.arena import Arena
 from app.db.init_db import init_db
+from app.models.booking import Booking, BookingStatus, BookingType, BookingWithDetails, PaginatedBookingsResponse
+from app.models.court import Court
 
 router = APIRouter()
 
@@ -73,6 +76,49 @@ async def get_user(
     user["_id"] = str(user["_id"])
     
     return user
+
+@router.put("/admin/users/{user_id}", response_model=User)
+async def update_user(
+    user_id: str,
+    user_update: UserUpdate,
+    current_user = Depends(get_current_admin_user)
+):
+    """Atualizar dados do usuário pelo admin"""
+    
+    # Verificar se o username já existe (se estiver sendo atualizado)
+    if user_update.username and user_update.username != current_user.username:
+        existing_user = await db.db.users.find_one({"username": user_update.username})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nome de usuário já está em uso"
+            )
+    
+    # Verificar se o email já existe (se estiver sendo atualizado)
+    if user_update.email and user_update.email != current_user.email:
+        existing_user = await db.db.users.find_one({"email": user_update.email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email já está em uso"
+            )
+    
+    # Preparar os dados para atualização
+    update_data = user_update.dict(exclude_unset=True)
+    
+    # Adicionar data de atualização
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Atualizar usuário
+    await db.db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    
+    # Retornar usuário atualizado
+    updated_user_doc = await db.db.users.find_one({"_id": ObjectId(user_id)})
+    
+    return User.from_mongo(updated_user_doc)
 
 @router.put("/admin/users/{user_id}/role")
 async def update_user_role(
@@ -170,15 +216,11 @@ async def get_all_arenas(
     current_user = Depends(get_current_admin_user),
     page: int = 1,
     items_per_page: int = 20,
-    search: Optional[str] = None,
-    active_only: bool = False
+    search: Optional[str] = None
 ):
     """Listar todas as arenas (somente admin)"""
     # Construir filtro
     filter_query = {}
-    
-    if active_only:
-        filter_query["active"] = True
     
     if search:
         # Buscar por nome ou cidade
@@ -197,24 +239,244 @@ async def get_all_arenas(
     # Converter cursor para lista
     arenas = []
     async for arena in cursor:
+        arena = Arena.from_mongo(arena)
+        
         # Adicionar informações do proprietário
-        owner = await db.db.users.find_one({"_id": ObjectId(arena["owner_id"])})
-        if owner:
-            arena["owner"] = {
-                "id": str(owner["_id"]),
-                "name": f"{owner.get('first_name')} {owner.get('last_name')}",
-                "email": owner.get("email")
+        owner = await db.db.users.find_one({"_id": ObjectId(arena.owner_id)})
+        user_owner = User.from_mongo(owner)
+        if user_owner:
+            arena.owner = {
+                "id": user_owner.id,
+                "name": f"{user_owner.first_name} {user_owner.last_name}",
+                "email": user_owner.email
             }
         
         # Adicionar contagem de quadras
-        courts_count = await db.db.courts.count_documents({"arena_id": str(arena["_id"])})
-        arena["courts_count"] = courts_count
+        courts_count = await db.db.courts.count_documents({"arena_id": arena.id})
+        arena.courts_count = courts_count
         
         # Converter ObjectId para string
-        arena["_id"] = str(arena["_id"])
+        #arena["_id"] = str(arena["_id"])
         arenas.append(arena)
     
     return arenas
+
+@router.get("admin/arenas/{arena_id}", response_model=Arena)
+async def get_arena(
+    arena_id: str,
+    current_user = Depends(get_current_admin_user),):
+    """Obter detalhes de uma arena"""
+    try:
+        arena_doc = await db.db.arenas.find_one({"_id": ObjectId(arena_id)})
+        if not arena_doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Arena não encontrada"
+            )
+        
+        # Adicionar contagem de quadras
+        courts_count = await db.db.courts.count_documents({"arena_id": arena_id})
+        arena_doc["courts_count"] = courts_count
+        
+        # Adicionar informações do proprietário (básicas)
+        owner_doc = await db.db.users.find_one({"_id": ObjectId(arena_doc["owner_id"])})
+        if owner_doc:
+            arena_doc["owner"] = {
+                "id": str(owner_doc["_id"]),
+                "name": f"{owner_doc.get('first_name')} {owner_doc.get('last_name')}",
+                "email": owner_doc.get("email"),
+                "phone": owner_doc.get("phone")
+            }
+        
+        return Arena.from_mongo(arena_doc)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao buscar arena: {str(e)}"
+        )
+
+@router.get("/admin/bookings", response_model=PaginatedBookingsResponse)
+async def get_all_bookings(
+    current_user = Depends(get_current_admin_user),
+    page: int = 1,
+    items_per_page: int = 20,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Listar todas as reservas (somente admin)"""
+    # Construir filtro
+    filter_query = {}
+    
+    if status:
+        if status not in BookingStatus.__members__.values():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Status inválido"
+            )
+        filter_query["status"] = status
+    
+    if start_date or end_date:
+        date_filter = {}
+        try:
+            if start_date:
+                start_datetime = datetime.fromisoformat(start_date)
+                date_filter["$gte"] = start_datetime
+            if end_date:
+                end_datetime = datetime.fromisoformat(end_date) + timedelta(days=1)
+                date_filter["$lt"] = end_datetime
+            
+            filter_query["$or"] = [
+                {"booking_type": BookingType.SINGLE, "timeslot.date": {"$exists": True, **date_filter}},
+                {"booking_type": BookingType.MONTHLY, "monthly_config.start_date": {"$exists": True, **date_filter}}
+            ]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de data inválido. Use YYYY-MM-DD"
+            )
+    
+    if search:
+        regex = {"$regex": search, "$options": "i"}
+        filter_query["$or"] = [
+            {"user_name": regex},
+            {"user_email": regex},
+            {"court_name": regex},
+            {"arena_name": regex}
+        ]
+    
+    # Pipeline de agregação
+    pipeline = [
+        {"$match": filter_query},
+        {"$sort": {"created_at": -1}},
+        {"$skip": (page - 1) * items_per_page},
+        {"$limit": items_per_page},
+        # Lookup para usuário
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "as": "user"
+            }
+        },
+        {"$unwind": "$user"},
+        # Lookup para quadra
+        {
+            "$lookup": {
+                "from": "courts",
+                "localField": "court_id",
+                "foreignField": "_id",
+                "as": "court"
+            }
+        },
+        {"$unwind": "$court"},
+        # Lookup para arena
+        {
+            "$lookup": {
+                "from": "arenas",
+                "localField": "arena_id",
+                "foreignField": "_id",
+                "as": "arena"
+            }
+        },
+        {"$unwind": "$arena"},
+        # Lookup para pagamento
+        {
+            "$lookup": {
+                "from": "payments",
+                "localField": "_id",
+                "foreignField": "booking_id",
+                "as": "payment"
+            }
+        },
+        {"$unwind": {"path": "$payment", "preserveNullAndEmptyArrays": True}},
+        # Projeção final
+        {
+            "$project": {
+                "_id": {"$toString": "$_id"},
+                "user_id": {"$toString": "$user_id"},
+                "court_id": {"$toString": "$court_id"},
+                "arena_id": {"$toString": "$arena_id"},
+                "booking_type": 1,
+                "timeslot": 1,
+                "monthly_config": 1,
+                "status": 1,
+                "price_per_hour": 1,
+                "total_hours": 1,
+                "subtotal": 1,
+                "extra_services": 1,
+                "total_amount": 1,
+                "discount_amount": 1,
+                "requires_payment": 1,
+                "payment_deadline": 1,
+                "created_at": 1,
+                "updated_at": 1,
+                "payment_status": "$payment.status",
+                "can_cancel": {
+                    "$and": [
+                        {"$ne": ["$status", BookingStatus.CANCELLED]},
+                        {"$ne": ["$status", BookingStatus.COMPLETED]}
+                    ]
+                },
+                "user": {
+                    "id": {"$toString": "$user._id"},
+                    "name": {"$concat": ["$user.first_name", " ", "$user.last_name"]},
+                    "email": "$user.email",
+                    "phone": "$user.phone",
+                    "username": "$user.username"
+                },
+                "court": {
+                    "id": {"$toString": "$court._id"},
+                    "name": "$court.name",
+                    "type": "$court.type",
+                    "cover_image": "$court.cover_image"
+                },
+                "arena": {
+                    "id": {"$toString": "$arena._id"},
+                    "name": "$arena.name",
+                    "city": "$arena.address.city",
+                    "neighborhood": "$arena.address.neighborhood"
+                }
+            }
+        }
+    ]
+    
+    # Executar a consulta
+    bookings_cursor = db.db.bookings.aggregate(pipeline)
+    bookings = await bookings_cursor.to_list(length=None)
+    
+    # Contar total de documentos
+    total_count = await db.db.bookings.count_documents(filter_query)
+    total_pages = max(1, (total_count + items_per_page - 1) // items_per_page)
+    
+    # Criar objetos Pydantic para cada booking
+    validated_bookings = []
+    for booking in bookings:
+        try:
+            # Converter datas para strings ISO
+            if booking.get("created_at"):
+                booking["created_at"] = booking["created_at"].isoformat()
+            if booking.get("updated_at"):
+                booking["updated_at"] = booking["updated_at"].isoformat()
+            if booking.get("payment_deadline"):
+                booking["payment_deadline"] = booking["payment_deadline"].isoformat()
+            
+            # Converter para o modelo BookingWithDetails
+            validated_booking = BookingWithDetails(**booking)
+            validated_bookings.append(validated_booking)
+        except ValidationError as e:
+            print(f"Erro de validação ao processar booking: {e}")
+            continue
+    
+    return PaginatedBookingsResponse(
+        bookings=validated_bookings,
+        total_pages=total_pages,
+        current_page=page,
+        total_items=total_count,
+        items_per_page=items_per_page
+    )
 
 @router.get("/admin/dashboard")
 async def admin_dashboard(

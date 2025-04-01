@@ -23,7 +23,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import adminService from '../../services/adminService';
 
 interface BookingData {
-  id: string;
+  _id: string;
   user_id: string;
   arena_id: string;
   court_id: string;
@@ -160,7 +160,7 @@ const AdminBookingsPage: React.FC = () => {
       // Atualizar lista de reservas após a ação
       setBookings(
         bookings.map((b) =>
-          b.id === bookingId ? { ...b, status: newStatus as BookingData['status'] } : b
+          b._id === bookingId ? { ...b, status: newStatus as BookingData['status'] } : b
         )
       );
     } catch (err: any) {
@@ -242,7 +242,7 @@ const AdminBookingsPage: React.FC = () => {
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
               onClick={() => {
                 setShowMenu(false);
-                handleViewBookingDetails(bookingData.id);
+                handleViewBookingDetails(bookingData._id);
               }}
             >
               <Eye size={16} className="mr-2" />
@@ -254,9 +254,9 @@ const AdminBookingsPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleUpdateBookingStatus(bookingData.id, 'confirmed');
+                  handleUpdateBookingStatus(bookingData._id, 'confirmed');
                 }}
-                disabled={actionInProgress === bookingData.id}
+                disabled={actionInProgress === bookingData._id}
               >
                 <CheckCircle size={16} className="mr-2" />
                 Confirmar
@@ -268,9 +268,9 @@ const AdminBookingsPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleUpdateBookingStatus(bookingData.id, 'completed');
+                  handleUpdateBookingStatus(bookingData._id, 'completed');
                 }}
-                disabled={actionInProgress === bookingData.id}
+                disabled={actionInProgress === bookingData._id}
               >
                 <CheckCircle size={16} className="mr-2" />
                 Marcar como Concluída
@@ -282,9 +282,9 @@ const AdminBookingsPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleUpdateBookingStatus(bookingData.id, 'cancelled');
+                  handleUpdateBookingStatus(bookingData._id, 'cancelled');
                 }}
-                disabled={actionInProgress === bookingData.id}
+                disabled={actionInProgress === bookingData._id}
               >
                 <X size={16} className="mr-2" />
                 Cancelar
@@ -550,11 +550,11 @@ const AdminBookingsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {bookings.map((bookingData) => (
-                  <tr key={bookingData.id} className="hover:bg-gray-50">
+                  <tr key={bookingData._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          #{bookingData.id.substring(0, 8)}
+                          #{bookingData._id.substring(0, 8)}
                         </div>
                         <div className="text-gray-500">
                           {new Date(bookingData.created_at).toLocaleDateString('pt-BR')}
@@ -614,17 +614,17 @@ const AdminBookingsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end">
                         <button
-                          onClick={() => handleViewBookingDetails(bookingData.id)}
+                          onClick={() => handleViewBookingDetails(bookingData._id)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           <Eye size={16} />
                         </button>
 
-                        {actionInProgress === bookingData.id ? (
+                        {actionInProgress === bookingData._id ? (
                           <Loader size={16} className="animate-spin text-gray-500 mr-3" />
                         ) : bookingData.status === 'pending' ? (
                           <button
-                            onClick={() => handleUpdateBookingStatus(bookingData.id, 'confirmed')}
+                            onClick={() => handleUpdateBookingStatus(bookingData._id, 'confirmed')}
                             className="text-green-600 hover:text-green-900 mr-3"
                             title="Confirmar"
                           >
@@ -632,7 +632,7 @@ const AdminBookingsPage: React.FC = () => {
                           </button>
                         ) : bookingData.status === 'confirmed' ? (
                           <button
-                            onClick={() => handleUpdateBookingStatus(bookingData.id, 'completed')}
+                            onClick={() => handleUpdateBookingStatus(bookingData._id, 'completed')}
                             className="text-blue-600 hover:text-blue-900 mr-3"
                             title="Marcar como Concluída"
                           >

@@ -30,7 +30,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <Link to={`/courts/${court.id}`}>
+      <Link to={`/courts/${court._id}`}>
         <div className="relative">
           {/* Imagem principal */}
           <img

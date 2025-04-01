@@ -23,11 +23,11 @@ import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminUsersPage from '../pages/admin/AdminUsersPage';
 import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage';
 import AdminArenasPage from '../pages/admin/AdminArenasPage';
-import AdminEditArenaPage from '../pages/admin/AdminEditArenaPage';
-import AdminCreateArenaPage from '../pages/admin/AdminCreateArenaPage';
-import AdminCourtsPage from '../pages/admin/AdminCourtsPage';
+//import AdminEditArenaPage from '../pages/admin/AdminEditArenaPage';
+//import AdminCreateArenaPage from '../pages/admin/AdminCreateArenaPage';
+//import AdminCourtsPage from '../pages/admin/AdminCourtsPage';
 import AdminBookingsPage from '../pages/admin/AdminBookingsPage';
-import AdminBookingDetailsPage from '../pages/admin/AdminBookingDetailsPage';
+//import AdminBookingDetailsPage from '../pages/admin/AdminBookingDetailsPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 
 // Layouts
@@ -90,11 +90,9 @@ const AppRouter: React.FC = () => {
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/arenas" element={<AdminArenasPage />} />
-            <Route path="/admin/arenas/:id/edit" element={<AdminEditArenaPage />} />
-            <Route path="/admin/arenas/new" element={<AdminCreateArenaPage />} />
-            <Route path="/admin/arenas/:id/courts" element={<AdminCourtsPage />} />
+
             <Route path="/admin/bookings" element={<AdminBookingsPage />} />
-            <Route path="/admin/bookings/:id" element={<AdminBookingDetailsPage />} />
+
             <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
 

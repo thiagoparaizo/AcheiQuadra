@@ -40,7 +40,7 @@ export interface Address {
 }
 
 export interface Arena {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   address: Address;
@@ -75,7 +75,7 @@ export interface WeeklySchedule {
 }
 
 export interface Court {
-  id: string;
+  _id: string;
   arena_id: string;
   name: string;
   type: string;
@@ -200,6 +200,8 @@ const courtsService = {
       const params = endDate
         ? { start_date: startDate, end_date: endDate }
         : { start_date: startDate };
+
+      console.log('getCourtAvailability params: ' + params);
       const response = await api.get(`/courts/${courtId}/availability`, { params });
       return response.data;
     } catch (error) {

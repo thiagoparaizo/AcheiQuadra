@@ -39,7 +39,7 @@ const ArenaCard: React.FC<ArenaCardProps> = ({ arena }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <Link to={`/arenas/${arena.id}`}>
+      <Link to={`/arenas/${arena._id}`}>
         <div className="relative">
           {/* Imagem principal ou logo */}
           <img

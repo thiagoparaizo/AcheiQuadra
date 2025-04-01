@@ -20,7 +20,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import adminService from '../../services/adminService';
 
 interface UserData {
-  id: string;
+  _id: string;
   username: string;
   email: string;
   first_name: string;
@@ -84,6 +84,8 @@ const AdminUsersPage: React.FC = () => {
 
       // Buscar usuários
       const response = await adminService.getUsers(params);
+      console.log('Users response:', response);
+      console.log('Users:', response.users);
 
       setUsers(response.users);
       setTotalPages(response.total_pages || 1);
@@ -127,7 +129,7 @@ const AdminUsersPage: React.FC = () => {
       }
 
       // Atualizar lista de usuários após a ação
-      setUsers(users.map((u) => (u.id === userId ? { ...u, is_active: !isCurrentlyActive } : u)));
+      setUsers(users.map((u) => (u._id === userId ? { ...u, is_active: !isCurrentlyActive } : u)));
     } catch (err: any) {
       console.error('Erro ao alterar status do usuário:', err);
       const errorMsg = err.response?.data?.detail || 'Erro ao atualizar o status do usuário';
@@ -147,7 +149,7 @@ const AdminUsersPage: React.FC = () => {
       await adminService.updateUserRole(userId, newRole);
 
       // Atualizar lista de usuários após a ação
-      setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
+      setUsers(users.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
     } catch (err: any) {
       console.error('Erro ao alterar papel do usuário:', err);
       const errorMsg = err.response?.data?.detail || 'Erro ao atualizar o papel do usuário';
@@ -159,6 +161,11 @@ const AdminUsersPage: React.FC = () => {
 
   // Navegar para detalhes do usuário
   const handleViewUserDetails = (userId: string) => {
+    console.log('User ID to navigate:', userId); // Adicione este log
+    if (!userId) {
+      console.error('User ID is undefined or empty');
+      return;
+    }
     navigate(`/admin/users/${userId}`);
   };
 
@@ -222,7 +229,7 @@ const AdminUsersPage: React.FC = () => {
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
               onClick={() => {
                 setShowMenu(false);
-                handleViewUserDetails(userData.id);
+                handleViewUserDetails(userData._id);
               }}
             >
               <User size={16} className="mr-2" />
@@ -235,9 +242,9 @@ const AdminUsersPage: React.FC = () => {
               } hover:bg-gray-100 flex items-center`}
               onClick={() => {
                 setShowMenu(false);
-                handleToggleUserStatus(userData.id, userData.is_active);
+                handleToggleUserStatus(userData._id, userData.is_active);
               }}
-              disabled={actionInProgress === userData.id}
+              disabled={actionInProgress === userData._id}
             >
               {userData.is_active ? (
                 <>
@@ -257,9 +264,9 @@ const AdminUsersPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleChangeUserRole(userData.id, 'admin');
+                  handleChangeUserRole(userData._id, 'admin');
                 }}
-                disabled={actionInProgress === userData.id}
+                disabled={actionInProgress === userData._id}
               >
                 <Lock size={16} className="mr-2" />
                 Promover a Admin
@@ -271,9 +278,9 @@ const AdminUsersPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleChangeUserRole(userData.id, 'arena_owner');
+                  handleChangeUserRole(userData._id, 'arena_owner');
                 }}
-                disabled={actionInProgress === userData.id}
+                disabled={actionInProgress === userData._id}
               >
                 <Lock size={16} className="mr-2" />
                 Definir como Proprietário
@@ -285,9 +292,9 @@ const AdminUsersPage: React.FC = () => {
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setShowMenu(false);
-                  handleChangeUserRole(userData.id, 'customer');
+                  handleChangeUserRole(userData._id, 'customer');
                 }}
-                disabled={actionInProgress === userData.id}
+                disabled={actionInProgress === userData._id}
               >
                 <User size={16} className="mr-2" />
                 Definir como Cliente
@@ -526,7 +533,7 @@ const AdminUsersPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((userData) => (
-                  <tr key={userData.id} className="hover:bg-gray-50">
+                  <tr key={userData._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -573,17 +580,17 @@ const AdminUsersPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end">
                         <button
-                          onClick={() => handleViewUserDetails(userData.id)}
+                          onClick={() => handleViewUserDetails(userData._id)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           <Edit size={16} />
                         </button>
 
-                        {actionInProgress === userData.id ? (
+                        {actionInProgress === userData._id ? (
                           <Loader size={16} className="animate-spin text-gray-500 mr-3" />
                         ) : (
                           <button
-                            onClick={() => handleToggleUserStatus(userData.id, userData.is_active)}
+                            onClick={() => handleToggleUserStatus(userData._id, userData.is_active)}
                             className={`${
                               userData.is_active
                                 ? 'text-red-600 hover:text-red-900'

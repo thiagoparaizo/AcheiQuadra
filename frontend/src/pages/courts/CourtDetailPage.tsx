@@ -305,7 +305,7 @@ const CourtDetailPage: React.FC = () => {
           {/* Botão de reserva */}
           <button
             className="bg-primary text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-primary-dark w-full"
-            onClick={() => navigate(`/booking/${court.id}`)}
+            onClick={() => navigate(`/booking/${court._id}`)}
           >
             Reservar agora
           </button>

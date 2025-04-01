@@ -89,7 +89,7 @@ const adminService = {
   getUsers: async (params: UserListParams = {}) => {
     try {
       const response = await api.get('/admin/users', { params });
-
+      console.log('getUsers: ' + response.data);
       // Adicionar total_pages para paginação (caso a API não retorne)
       if (!response.data.total_pages && response.data.total_count && params.items_per_page) {
         response.data.total_pages = Math.ceil(response.data.total_count / params.items_per_page);
@@ -149,7 +149,7 @@ const adminService = {
   updateUserProfile: async (userId: string, userData: UserProfileUpdateData) => {
     try {
       // Usando a API de usuário comum, já que não temos endpoint específico de admin para isso
-      const response = await api.put(`/users/${userId}`, userData);
+      const response = await api.put(`/admin/users/${userId}`, userData);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar perfil do usuário ${userId}:`, error);
