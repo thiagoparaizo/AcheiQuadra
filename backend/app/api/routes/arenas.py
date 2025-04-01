@@ -263,7 +263,9 @@ async def get_arena(arena_id: str):
 @router.put("/arenas/{arena_id}", response_model=Arena)
 async def update_arena(
     arena_id: str,
-    arena_update: ArenaUpdateWithFiles,
+    arena_data: ArenaUpdate = Depends(),
+    logo: Optional[UploadFile] = File(None),
+    photos: List[UploadFile] = File([]),
     current_user = Depends(get_current_active_user)
 ):
     """Atualizar arena (somente dono ou admin)"""
@@ -277,9 +279,9 @@ async def update_arena(
             )
         
         # Verificar permissões
-        user_id = str(current_user["id"])
+        user_id = current_user.id
         is_owner = arena["owner_id"] == user_id
-        is_admin = current_user.get("role") == "admin"
+        is_admin = current_user.role == "admin"
         
         if not (is_owner or is_admin):
             raise HTTPException(
@@ -287,12 +289,8 @@ async def update_arena(
                 detail="Permissão negada"
             )
         
-        # Converter dados do formulário para JSON
-        arena_dict = json.loads(arena_update)
-        arena_update = ArenaUpdate(**arena_dict)
-        
-        # Preparar dados para atualização
-        update_data = {k: v for k, v in arena_update.dict().items() if v is not None}
+        # Preparar dados para atualização - usar diretamente o objeto Pydantic
+        update_data = arena_data.dict(exclude_unset=True)
         
         # Se o endereço foi atualizado, geocodificar para obter novas coordenadas
         if "address" in update_data:
@@ -310,24 +308,24 @@ async def update_arena(
         )
         
         # Processar upload de logo se existir
-        if arena_update.logo:
+        if logo:
             # Criar diretório para armazenar arquivos se não existir
             upload_dir = Path("static/arenas") / arena_id
             upload_dir.mkdir(parents=True, exist_ok=True)
             
             # Salvar logo
-            logo_path = upload_dir / f"logo{Path(arena_update.logo.filename).suffix}"
+            logo_path = upload_dir / f"logo{Path(logo.filename).suffix}"
             with open(logo_path, "wb") as buffer:
-                shutil.copyfileobj(arena_update.logo.file, buffer)
+                shutil.copyfileobj(logo.file, buffer)
             
             # Atualizar URL do logo no banco de dados
-            logo_url = f"/static/arenas/{arena_id}/logo{Path(arena_update.logo.filename).suffix}"
+            logo_url = f"/static/arenas/{arena_id}/logo{Path(logo.filename).suffix}"
             await db.db.arenas.update_one(
                 {"_id": ObjectId(arena_id)},
                 {"$set": {"logo_url": logo_url}}
             )
         
-        # Processar upload de fotos se existirem e se deve substituir
+        # Processar upload de fotos se existirem
         if photos:
             # Obter fotos existentes
             existing_photos = arena.get("photos", [])
@@ -374,16 +372,9 @@ async def update_arena(
                 "phone": owner.get("phone")
             }
         
-        # Converter ObjectId para string
-        updated_arena["_id"] = str(updated_arena["_id"])
-        
-        return updated_arena
+        # Retornar arena atualizada
+        return Arena.from_mongo(updated_arena)
     
-    except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Dados da arena inválidos. Formato JSON esperado."
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

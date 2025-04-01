@@ -4,6 +4,9 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, time
 from enum import Enum
 from app.models.base import MongoBaseModel, MongoId
+from app.models.arena import Arena
+from app.models.court import Court
+from app.models.user import User
 
 class BookingType(str, Enum):
     SINGLE = "single"  # Aluguel avulso
@@ -89,8 +92,8 @@ class Booking(BookingBase):
     updated_at: datetime
     
     # Dados relacionados
-    court: Optional[Dict[str, Any]] = None
-    arena: Optional[Dict[str, Any]] = None
+    court: Court  = None
+    arena: Arena = None
     user: Optional[Dict[str, Any]] = None
 
     class Config:

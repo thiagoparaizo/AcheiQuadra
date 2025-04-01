@@ -23,11 +23,11 @@ import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminUsersPage from '../pages/admin/AdminUsersPage';
 import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage';
 import AdminArenasPage from '../pages/admin/AdminArenasPage';
-//import AdminEditArenaPage from '../pages/admin/AdminEditArenaPage';
-//import AdminCreateArenaPage from '../pages/admin/AdminCreateArenaPage';
-//import AdminCourtsPage from '../pages/admin/AdminCourtsPage';
+import AdminEditArenaPage from '../pages/admin/AdminEditArenaPage';
+import AdminCreateArenaPage from '../pages/admin/AdminCreateArenaPage';
+import AdminCourtsPage from '../pages/admin/AdminCourtsPage';
 import AdminBookingsPage from '../pages/admin/AdminBookingsPage';
-//import AdminBookingDetailsPage from '../pages/admin/AdminBookingDetailsPage';
+import AdminBookingDetailsPage from '../pages/admin/AdminBookingDetailsPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 
 // Layouts
@@ -84,16 +84,23 @@ const AppRouter: React.FC = () => {
           {/* Rotas administrativas */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
+            {/* Usuários */}
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="users/:id" element={<AdminUserDetailPage />} />
-            {/* Rotas de administração */}
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/admin/users" element={<AdminUsersPage />} />
-            <Route path="/admin/arenas" element={<AdminArenasPage />} />
-
-            <Route path="/admin/bookings" element={<AdminBookingsPage />} />
-
-            <Route path="/admin/settings" element={<AdminSettingsPage />} />
+            {/* Arenas */}
+            <Route path="arenas" element={<AdminArenasPage />} />
+            <Route path="arenas/new" element={<AdminCreateArenaPage />} />
+            <Route path="arenas/:id/edit" element={<AdminEditArenaPage />} />
+            <Route path="arenas/:id/courts" element={<AdminCourtsPage />} />
+            {/** Quadras / Courts */}
+            <Route path="courts/:id" element={<CourtDetailPage />} /> {/* TODO AJUSTAR*/}
+            <Route path="arenas/:id/courts/new" element={<AdminCourtsPage />} /> {/* TODO AJUSTAR*/}
+            <Route path="courts/:id/edit" element={<AdminCourtsPage />} /> {/* TODO AJUSTAR*/}
+            {/* Reservas */}
+            <Route path="bookings" element={<AdminBookingsPage />} />
+            <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
+            {/* Configurações */}
+            <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
 
           {/* Rota 404 para páginas não encontradas */}

@@ -29,7 +29,7 @@ export interface BookingCreate {
 }
 
 export interface Booking {
-  id: string;
+  _id: string;
   user_id: string;
   court_id: string;
   arena_id: string;
@@ -80,6 +80,7 @@ const bookingService = {
   getUserBookings: async (status?: string, page: number = 1): Promise<Booking[]> => {
     try {
       const params = { status, page };
+      console.log('getUserBookings params: ' + params);
       const response = await api.get('/bookings/user/me', { params });
       return response.data;
     } catch (error) {

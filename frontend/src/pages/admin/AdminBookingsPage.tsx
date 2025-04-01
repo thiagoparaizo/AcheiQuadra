@@ -299,7 +299,9 @@ const AdminBookingsPage: React.FC = () => {
   // Função para formatar data e hora da reserva
   const formatBookingDateTime = (booking: BookingData) => {
     if (booking.booking_type === 'single' && booking.timeslot) {
-      return `${booking.timeslot.date} · ${booking.timeslot.start_time} - ${booking.timeslot.end_time}`;
+      return `${formatDate(booking.timeslot.date)} · ${booking.timeslot.start_time} - ${
+        booking.timeslot.end_time
+      }`;
     } else if (booking.booking_type === 'monthly' && booking.monthly_config) {
       const weekdays = booking.monthly_config.weekdays
         .map((day) => {
@@ -308,12 +310,18 @@ const AdminBookingsPage: React.FC = () => {
         })
         .join(', ');
 
-      return `${booking.monthly_config.start_date} a ${
-        booking.monthly_config.end_date || 'Indefinido'
+      return `${formatDate(booking.monthly_config.start_date)} a ${
+        formatDate(booking.monthly_config.end_date || '') || 'Indefinido'
       } · ${weekdays} · ${booking.monthly_config.start_time} - ${booking.monthly_config.end_time}`;
     }
 
     return 'Dados indisponíveis';
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
   // Função para renderizar o status com cores
@@ -500,7 +508,7 @@ const AdminBookingsPage: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" style={{ minHeight: '300px' }}>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -554,7 +562,11 @@ const AdminBookingsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          #{bookingData._id.substring(0, 8)}
+                          #
+                          {bookingData._id.substring(
+                            bookingData._id.length - 9,
+                            bookingData._id.length
+                          )}
                         </div>
                         <div className="text-gray-500">
                           {new Date(bookingData.created_at).toLocaleDateString('pt-BR')}

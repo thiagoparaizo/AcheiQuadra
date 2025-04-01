@@ -22,7 +22,7 @@ import adminService from '../../services/adminService';
 import api from '../../services/api';
 
 interface CourtData {
-  id: string;
+  _id: string;
   name: string;
   type: string;
   description: string;
@@ -126,7 +126,7 @@ const AdminCourtsPage: React.FC = () => {
       setArena(arenaData);
 
       // Buscar quadras da arena
-      const courtsData = await api.get(`/arenas/${arenaId}/courts`);
+      const courtsData = await api.get(`/admin/arenas/${arenaId}/courts`);
       setCourts(courtsData.data);
     } catch (err: any) {
       console.error('Erro ao carregar dados:', err);
@@ -169,19 +169,19 @@ const AdminCourtsPage: React.FC = () => {
   const toggleCourtAvailability = async (court: CourtData) => {
     if (actionInProgress) return;
 
-    setActionInProgress(court.id);
+    setActionInProgress(court._id);
     setError(null);
     setSuccess(null);
 
     try {
       // Em um cenário real, chamaria a API para atualizar o status da quadra
-      await api.put(`/courts/${court.id}`, {
+      await api.put(`/courts/${court._id}`, {
         is_available: !court.is_available,
       });
 
       // Atualizar estado local
       setCourts((prevCourts) =>
-        prevCourts.map((c) => (c.id === court.id ? { ...c, is_available: !c.is_available } : c))
+        prevCourts.map((c) => (c._id === court._id ? { ...c, is_available: !c.is_available } : c))
       );
 
       setSuccess(`Quadra ${court.is_available ? 'desativada' : 'ativada'} com sucesso!`);
@@ -201,16 +201,16 @@ const AdminCourtsPage: React.FC = () => {
     if (actionInProgress) return;
     if (!window.confirm(`Tem certeza que deseja excluir a quadra "${court.name}"?`)) return;
 
-    setActionInProgress(court.id);
+    setActionInProgress(court._id);
     setError(null);
     setSuccess(null);
 
     try {
       // Em um cenário real, chamaria a API para excluir a quadra
-      await api.delete(`/courts/${court.id}`);
+      await api.delete(`/courts/${court._id}`);
 
       // Atualizar estado local
-      setCourts((prevCourts) => prevCourts.filter((c) => c.id !== court.id));
+      setCourts((prevCourts) => prevCourts.filter((c) => c._id !== court._id));
 
       setSuccess(`Quadra "${court.name}" excluída com sucesso!`);
     } catch (err: any) {
@@ -422,7 +422,7 @@ const AdminCourtsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCourts.map((court) => (
-                  <tr key={court.id} className="hover:bg-gray-50">
+                  <tr key={court._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-md overflow-hidden">
@@ -490,14 +490,14 @@ const AdminCourtsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end">
                         <button
-                          onClick={() => navigate(`/admin/courts/${court.id}`)}
+                          onClick={() => navigate(`/admin/courts/${court._id}`)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                           title="Ver detalhes"
                         >
                           <Eye size={18} />
                         </button>
                         <button
-                          onClick={() => navigate(`/admin/courts/${court.id}/edit`)}
+                          onClick={() => navigate(`/admin/courts/${court._id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900 mr-3"
                           title="Editar"
                         >
@@ -511,9 +511,9 @@ const AdminCourtsPage: React.FC = () => {
                               : 'text-green-600 hover:text-green-900'
                           } mr-3`}
                           title={court.is_available ? 'Desativar' : 'Ativar'}
-                          disabled={actionInProgress === court.id}
+                          disabled={actionInProgress === court._id}
                         >
-                          {actionInProgress === court.id ? (
+                          {actionInProgress === court._id ? (
                             <Loader size={18} className="animate-spin" />
                           ) : court.is_available ? (
                             <X size={18} />
@@ -525,7 +525,7 @@ const AdminCourtsPage: React.FC = () => {
                           onClick={() => deleteCourt(court)}
                           className="text-red-600 hover:text-red-900"
                           title="Excluir"
-                          disabled={actionInProgress === court.id}
+                          disabled={actionInProgress === court._id}
                         >
                           <Trash2 size={18} />
                         </button>

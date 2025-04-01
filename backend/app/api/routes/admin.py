@@ -261,10 +261,10 @@ async def get_all_arenas(
     
     return arenas
 
-@router.get("admin/arenas/{arena_id}", response_model=Arena)
+@router.get("/admin/arenas/{arena_id}", response_model=Arena)
 async def get_arena(
     arena_id: str,
-    current_user = Depends(get_current_admin_user),):
+    current_user = Depends(get_current_admin_user)):
     """Obter detalhes de uma arena"""
     try:
         arena_doc = await db.db.arenas.find_one({"_id": ObjectId(arena_id)})
@@ -294,6 +294,52 @@ async def get_arena(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao buscar arena: {str(e)}"
         )
+        
+@router.get("/admin/arenas/{arena_id}/courts", response_model=List[Court])
+async def get_arena_courts(
+    arena_id: str,
+    court_type: Optional[str] = None,
+    is_available: Optional[bool] = None,
+    page: int = 1,
+    items_per_page: int = 20
+):
+    """Obter quadras de uma arena"""
+    # Verificar se a arena existe
+    arena = await db.db.arenas.find_one({"_id": ObjectId(arena_id)})
+    if not arena:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Arena não encontrada"
+        )
+    
+    # Construir filtro
+    filter_query = {"arena_id": ObjectId(arena_id)}
+    
+    if court_type:
+        filter_query["type"] = court_type
+    
+    if is_available is not None:
+        filter_query["is_available"] = is_available
+    
+    # Aplicar paginação
+    skip = (page - 1) * items_per_page
+    
+    # Buscar quadras
+    cursor = db.db.courts.find(filter_query).skip(skip).limit(items_per_page)
+    
+    # Converter cursor para lista
+    courts = []
+    async for court_doc in cursor:
+        # Adicionar dados extra da arena
+        court_doc["arena"] = {
+            "id": arena_id,
+            "name": arena["name"],
+            "address": arena["address"]
+        }
+        
+        courts.append(Court.from_mongo(court_doc))
+    
+    return courts
 
 @router.get("/admin/bookings", response_model=PaginatedBookingsResponse)
 async def get_all_bookings(
@@ -477,6 +523,72 @@ async def get_all_bookings(
         total_items=total_count,
         items_per_page=items_per_page
     )
+
+@router.get("/admin/bookings/{booking_id}", response_model=Booking)
+async def get_booking(
+    booking_id: str,
+    current_user = Depends(get_current_admin_user)
+):
+    """Obter detalhes de uma reserva específica (somente admin)"""
+    user_id = current_user.id
+    
+    # Buscar a reserva
+    booking = await db.db.bookings.find_one({"_id": ObjectId(booking_id)})
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reserva não encontrada"
+        )
+    
+    # Verificar permissões
+    is_owner = booking["user_id"] == user_id
+    
+    arena = await db.db.arenas.find_one({"_id": ObjectId(booking["arena_id"])})
+    if not arena:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Arena não encontrada"
+        )
+    arena = Arena.from_mongo(arena)
+    
+    is_arena_owner = arena.owner_id == user_id
+    is_admin = current_user.role == "admin"
+    
+    if not (is_owner or is_arena_owner or is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada"
+        )
+    
+    #ajuste nos ids dos dados relacionados no booking
+    booking["arena_id"] = str(booking["arena_id"])
+    booking["court_id"] = str(booking["court_id"])
+    booking["user_id"] = str(booking["user_id"])
+    
+    # Adicionar dados relacionados
+    court = await db.db.courts.find_one({"_id": ObjectId(booking["court_id"])})
+    if court:
+        court = Court.from_mongo(court)
+        booking["court"] = court
+    
+    booking["arena"] = arena
+    
+    # Incluir informações do usuário para o dono da arena
+    if is_arena_owner or is_admin:
+        user = await db.db.users.find_one({"_id": ObjectId(booking["user_id"])})
+        if user:
+            user = User.from_mongo(user)
+            booking["user"] = {
+                "id": user.id,
+                "name": f"{user.first_name} {user.last_name}",
+                "email": user.email,
+                "phone": user.phone
+            }
+    
+    # Converter ObjectId para string
+    booking["_id"] = str(booking["_id"])
+    
+    return booking
 
 @router.get("/admin/dashboard")
 async def admin_dashboard(

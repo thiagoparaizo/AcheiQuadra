@@ -12,6 +12,8 @@ from app.models.booking import (
 )
 from app.services.email import send_booking_confirmation_email, send_booking_update_email
 from app.services.whatsapp import send_booking_confirmation_whatsapp, send_booking_request_to_arena
+from app.models.court import Court
+from app.models.arena import Arena
 
 router = APIRouter()
 
@@ -315,25 +317,21 @@ async def get_user_bookings(
     # Converter cursor para lista
     bookings = []
     async for booking in cursor:
+        
+        new_booking = Booking.from_mongo(booking)
+        
         # Adicionar dados relacionados
         court = await db.db.courts.find_one({"_id": ObjectId(booking["court_id"])})
         if court:
-            booking["court"] = {
-                "id": str(court["_id"]),
-                "name": court["name"],
-                "type": court["type"]
-            }
+            court = Court.from_mongo(court)
+            new_booking.court = court
         
         arena = await db.db.arenas.find_one({"_id": ObjectId(booking["arena_id"])})
         if arena:
-            booking["arena"] = {
-                "id": str(arena["_id"]),
-                "name": arena["name"]
-            }
+            arena = Arena.from_mongo(arena)
+            new_booking.arena = arena
         
-        # Converter ObjectId para string
-        booking["_id"] = str(booking["_id"])
-        bookings.append(booking)
+        bookings.append(new_booking)
     
     return bookings
 

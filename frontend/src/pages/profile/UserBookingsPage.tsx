@@ -68,7 +68,7 @@ const UserBookingsPage: React.FC = () => {
       // Atualizar a lista após cancelamento
       setBookings((prevBookings) =>
         prevBookings.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
+          booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
         )
       );
     } catch (err) {
@@ -161,7 +161,7 @@ const UserBookingsPage: React.FC = () => {
             <div className="flex space-x-2">
               {booking.status === 'waiting_payment' && (
                 <Link
-                  to={`/payment/${booking.id}`}
+                  to={`/payment/${booking._id}`}
                   className="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark"
                 >
                   Pagar
@@ -170,7 +170,7 @@ const UserBookingsPage: React.FC = () => {
 
               {isUpcoming && booking.status !== 'waiting_payment' && (
                 <button
-                  onClick={() => handleCancelBooking(booking.id)}
+                  onClick={() => handleCancelBooking(booking._id)}
                   className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
                 >
                   Cancelar
@@ -178,7 +178,7 @@ const UserBookingsPage: React.FC = () => {
               )}
 
               <Link
-                to={`/bookings/${booking.id}`}
+                to={`/bookings/${booking._id}`}
                 className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200"
               >
                 Detalhes
@@ -320,7 +320,7 @@ const UserBookingsPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {bookings.map((booking) => (
-                <div key={booking.id}>{renderBookingCard(booking)}</div>
+                <div key={booking._id}>{renderBookingCard(booking)}</div>
               ))}
             </div>
           )}

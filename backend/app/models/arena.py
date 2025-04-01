@@ -1,4 +1,5 @@
 # app/models/arena.py
+from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, time
@@ -82,6 +83,7 @@ class Arena(ArenaBase):
 
     class Config:
         orm_mode = True
+        arbitrary_types_allowed = True
 
 # Modelo para busca de arenas
 class ArenaFilter(MongoBaseModel):
@@ -101,6 +103,16 @@ class ArenaCreateWithFiles(ArenaCreate):
     logo_base64: Optional[str] = None
     photos_base64: List[str] = Field(default_factory=list)
     
-class ArenaUpdateWithFiles(ArenaUpdate):
-    logo_base64: Optional[str] = None
-    photos_base64: List[str] = Field(default_factory=list)
+class ArenaUpdateWithFiles(MongoBaseModel):
+    # Campos básicos
+    name: Optional[str] = Form(None)
+    description: Optional[str] = Form(None)
+    phone: Optional[str] = Form(None)
+    email: Optional[EmailStr] = Form(None)
+    address: Optional[Address] = None
+    business_hours: Optional[WeeklySchedule] = None
+    amenities: Optional[List[str]] = None
+    cancellation_policy: Optional[str] = Form(None)
+    advance_payment_required: Optional[bool] = Form(None)
+    payment_deadline_hours: Optional[int] = Form(None)
+    active: Optional[bool] = Form(None)

@@ -25,7 +25,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import adminService from '../../services/adminService';
 
 interface BookingData {
-  id: string;
+  _id: string;
   user_id: string;
   arena_id: string;
   court_id: string;
@@ -322,7 +322,8 @@ const AdminBookingDetailsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold">Detalhes da Reserva</h1>
           <div className="text-gray-600 mt-1">
-            #{booking.id.substring(0, 8)} &middot; {formatDateTime(booking.created_at)}
+            #{booking._id.substring(booking._id.length - 9, booking._id.length)} &middot;{' '}
+            {formatDateTime(booking.created_at)}
           </div>
         </div>
       </div>
@@ -694,7 +695,7 @@ const AdminBookingDetailsPage: React.FC = () => {
               <dl className="divide-y divide-gray-200">
                 <div className="py-3 flex justify-between">
                   <dt className="text-sm font-medium text-gray-500">ID da Reserva</dt>
-                  <dd className="text-sm text-gray-900 ml-2">{booking.id}</dd>
+                  <dd className="text-sm text-gray-900 ml-2">{booking._id}</dd>
                 </div>
 
                 <div className="py-3 flex justify-between">

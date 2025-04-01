@@ -169,12 +169,12 @@ const BookingFormPage: React.FC = () => {
 
       // Exibir mensagem de sucesso e mostrar ID da reserva
       setSuccess(true);
-      setBookingId(response.id);
+      setBookingId(response._id);
 
       // Se a reserva requer pagamento, redirecionar para a página de pagamento
       if (response.requires_payment) {
         setTimeout(() => {
-          navigate(`/payment/${response.id}`);
+          navigate(`/payment/${response._id}`);
         }, 2000);
       }
     } catch (err: any) {

@@ -160,7 +160,8 @@ const adminService = {
   // Arenas
   getArenas: async (params: any = {}) => {
     try {
-      const response = await api.get('/admin/arenas', { params });
+      // Use o endpoint correto para listar arenas
+      const response = await api.get('/arenas/', { params });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar arenas:', error);
@@ -170,7 +171,7 @@ const adminService = {
 
   deleteArena: async (arenaId: string) => {
     try {
-      const response = await api.delete(`/admin/arenas/${arenaId}`);
+      const response = await api.delete(`/arenas/${arenaId}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao excluir arena ${arenaId}:`, error);
@@ -180,7 +181,7 @@ const adminService = {
 
   activateArena: async (arenaId: string) => {
     try {
-      const response = await api.post(`/admin/arenas/${arenaId}/activate`);
+      const response = await api.post(`/arenas/${arenaId}/activate`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao ativar arena ${arenaId}:`, error);
@@ -190,7 +191,7 @@ const adminService = {
 
   deactivateArena: async (arenaId: string) => {
     try {
-      const response = await api.post(`/admin/arenas/${arenaId}/deactivate`);
+      const response = await api.post(`/arenas/${arenaId}/deactivate`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao desativar arena ${arenaId}:`, error);
@@ -200,7 +201,7 @@ const adminService = {
 
   getArenaDetails: async (arenaId: string) => {
     try {
-      const response = await api.get(`/admin/arenas/${arenaId}`);
+      const response = await api.get(`/arenas/${arenaId}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar detalhes da arena ${arenaId}:`, error);
@@ -210,7 +211,60 @@ const adminService = {
 
   updateArena: async (arenaId: string, arenaData: any) => {
     try {
-      const response = await api.put(`/admin/arenas/${arenaId}`, arenaData);
+      // Criar um FormData para enviar dados multipart corretamente
+      const formData = new FormData();
+
+      // Adicionar os dados da arena como um campo JSON
+      const jsonData = {};
+
+      // Adicionar campos simples ao objeto JSON
+      [
+        'name',
+        'description',
+        'phone',
+        'email',
+        'address',
+        'business_hours',
+        'amenities',
+        'cancellation_policy',
+        'advance_payment_required',
+        'payment_deadline_hours',
+        'active',
+      ].forEach((field) => {
+        if (arenaData[field] !== undefined) {
+          if (typeof arenaData[field] === 'object' && !(arenaData[field] instanceof File)) {
+            formData.append(field, JSON.stringify(arenaData[field]));
+          } else {
+            formData.append(field, arenaData[field]);
+          }
+        }
+      });
+
+      // Adicionar logo se houver
+      if (arenaData.logo && arenaData.logo instanceof File) {
+        formData.append('logo', arenaData.logo);
+      }
+
+      // Adicionar fotos se houver
+      if (arenaData.photos && Array.isArray(arenaData.photos)) {
+        arenaData.photos.forEach((photo: File, index: number) => {
+          if (photo instanceof File) {
+            formData.append(`photos`, photo);
+          }
+        });
+      }
+
+      // Adicionar lista de fotos removidas
+      if (arenaData.removed_photos && Array.isArray(arenaData.removed_photos)) {
+        formData.append('removed_photos', JSON.stringify(arenaData.removed_photos));
+      }
+
+      const response = await api.put(`/arenas/${arenaId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar arena ${arenaId}:`, error);
@@ -220,7 +274,53 @@ const adminService = {
 
   createArena: async (arenaData: any) => {
     try {
-      const response = await api.post(`/admin/arenas/`, arenaData);
+      // Criar um FormData para enviar dados multipart corretamente
+      const formData = new FormData();
+
+      // Adicionar campos simples ao formulário
+      [
+        'name',
+        'description',
+        'phone',
+        'email',
+        'address',
+        'business_hours',
+        'amenities',
+        'cancellation_policy',
+        'advance_payment_required',
+        'payment_deadline_hours',
+        'active',
+        'owner_id',
+      ].forEach((field) => {
+        if (arenaData[field] !== undefined) {
+          if (typeof arenaData[field] === 'object' && !(arenaData[field] instanceof File)) {
+            formData.append(field, JSON.stringify(arenaData[field]));
+          } else {
+            formData.append(field, arenaData[field]);
+          }
+        }
+      });
+
+      // Adicionar logo se houver
+      if (arenaData.logo && arenaData.logo instanceof File) {
+        formData.append('logo', arenaData.logo);
+      }
+
+      // Adicionar fotos se houver
+      if (arenaData.photos && Array.isArray(arenaData.photos)) {
+        arenaData.photos.forEach((photo: File, index: number) => {
+          if (photo instanceof File) {
+            formData.append(`photos`, photo);
+          }
+        });
+      }
+
+      const response = await api.post(`/arenas/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       return response.data;
     } catch (error) {
       console.error('Erro ao criar arena:', error);
