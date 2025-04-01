@@ -171,7 +171,7 @@ const adminService = {
 
   deleteArena: async (arenaId: string) => {
     try {
-      const response = await api.delete(`/arenas/${arenaId}`);
+      const response = await api.delete(`/admin/arenas/${arenaId}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao excluir arena ${arenaId}:`, error);
@@ -181,7 +181,7 @@ const adminService = {
 
   activateArena: async (arenaId: string) => {
     try {
-      const response = await api.post(`/arenas/${arenaId}/activate`);
+      const response = await api.post(`/admin/arenas/${arenaId}/activate`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao ativar arena ${arenaId}:`, error);
@@ -191,7 +191,7 @@ const adminService = {
 
   deactivateArena: async (arenaId: string) => {
     try {
-      const response = await api.post(`/arenas/${arenaId}/deactivate`);
+      const response = await api.post(`/admin/arenas/${arenaId}/deactivate`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao desativar arena ${arenaId}:`, error);
@@ -259,7 +259,7 @@ const adminService = {
         formData.append('removed_photos', JSON.stringify(arenaData.removed_photos));
       }
 
-      const response = await api.put(`/arenas/${arenaId}`, formData, {
+      const response = await api.put(`/admin/arenas/${arenaId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -315,7 +315,7 @@ const adminService = {
         });
       }
 
-      const response = await api.post(`/arenas/`, formData, {
+      const response = await api.post(`/admin/arenas/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
