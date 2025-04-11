@@ -161,7 +161,7 @@ const adminService = {
   getArenas: async (params: any = {}) => {
     try {
       // Use o endpoint correto para listar arenas
-      const response = await api.get('/arenas/', { params });
+      const response = await api.get('/admin/arenas', { params });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar arenas:', error);
@@ -274,48 +274,57 @@ const adminService = {
 
   createArena: async (arenaData: any) => {
     try {
-      // Criar um FormData para enviar dados multipart corretamente
-      const formData = new FormData();
+      // const formData = new FormData();
 
-      // Adicionar campos simples ao formulário
-      [
-        'name',
-        'description',
-        'phone',
-        'email',
-        'address',
-        'business_hours',
-        'amenities',
-        'cancellation_policy',
-        'advance_payment_required',
-        'payment_deadline_hours',
-        'active',
-        'owner_id',
-      ].forEach((field) => {
-        if (arenaData[field] !== undefined) {
-          if (typeof arenaData[field] === 'object' && !(arenaData[field] instanceof File)) {
-            formData.append(field, JSON.stringify(arenaData[field]));
-          } else {
-            formData.append(field, arenaData[field]);
-          }
-        }
-      });
+      // // DEBUG: Verificar o conteúdo do FormData antes de enviar
+      // console.log('Conteúdo do FormData recebido:');
+      // for (const [key, value] of arenaData.entries()) {
+      //   console.log(key, value);
+      // }
 
-      // Adicionar logo se houver
-      if (arenaData.logo && arenaData.logo instanceof File) {
-        formData.append('logo', arenaData.logo);
-      }
+      // // Criar objeto com todos os dados da arena
+      // const arenaPayload = {
+      //   name: arenaData.name,
+      //   description: arenaData.description,
+      //   phone: arenaData.phone,
+      //   email: arenaData.email,
+      //   address: arenaData.address,
+      //   business_hours: arenaData.business_hours,
+      //   amenities: arenaData.amenities || [],
+      //   cancellation_policy: arenaData.cancellation_policy,
+      //   advance_payment_required: arenaData.advance_payment_required,
+      //   payment_deadline_hours: arenaData.payment_deadline_hours,
+      //   active: arenaData.active !== undefined ? arenaData.active : true,
+      //   owner_id: arenaData.owner_id || null,
+      // };
 
-      // Adicionar fotos se houver
-      if (arenaData.photos && Array.isArray(arenaData.photos)) {
-        arenaData.photos.forEach((photo: File, index: number) => {
-          if (photo instanceof File) {
-            formData.append(`photos`, photo);
-          }
-        });
-      }
+      // // Adicionar o payload JSON como string
+      // formData.append('data', JSON.stringify(arenaPayload));
 
-      const response = await api.post(`/admin/arenas/`, formData, {
+      // // Adicionar logo se existir
+      // if (arenaData.logo && arenaData.logo instanceof File) {
+      //   formData.append('logo', arenaData.logo);
+      // } else if (arenaData.logo && typeof arenaData.logo === 'string') {
+      //   // Se for uma string (URL/base64), pode precisar de tratamento especial
+      //   // Ou simplesmente ignorar se já estiver no servidor
+      // }
+
+      // // Adicionar fotos se existirem
+      // if (arenaData.photos && Array.isArray(arenaData.photos)) {
+      //   arenaData.photos.forEach((photo: File) => {
+      //     if (photo instanceof File) {
+      //       formData.append('photos', photo);
+      //     }
+      //   });
+      // }
+
+      // // DEBUG: Verificar o conteúdo do FormData antes de enviar
+      // console.log('Conteúdo do FormData remontado:');
+      // for (const [key, value] of formData.entries()) {
+      //   console.log(key, value);
+      // }
+
+      const response = await api.post(`/admin/arenas/`, arenaData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

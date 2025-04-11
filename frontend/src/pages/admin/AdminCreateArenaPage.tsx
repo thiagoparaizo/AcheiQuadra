@@ -299,40 +299,77 @@ const AdminCreateArenaPage: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    try {
-      // Preparar dados para envio
-      const formDataToSend = new FormData();
+    // Antes de enviar, validar campos obrigatórios
+    if (
+      !formData.name ||
+      !formData.description ||
+      !formData.phone ||
+      !formData.email ||
+      !formData.address.street ||
+      !formData.address.number ||
+      !formData.address.neighborhood ||
+      !formData.address.city ||
+      !formData.address.state ||
+      !formData.address.zipcode
+    ) {
+      //verificar os campos não preechidos e montar a mensagem de erro
+      const missingFields: string[] = [];
+      if (!formData.name) missingFields.push('Nome da Arena');
+      if (!formData.description) missingFields.push('Descrição');
+      if (!formData.phone) missingFields.push('Telefone');
+      if (!formData.email) missingFields.push('Email');
+      if (!formData.address.street) missingFields.push('Rua');
+      if (!formData.address.number) missingFields.push('Número');
+      if (!formData.address.neighborhood) missingFields.push('Bairro');
+      if (!formData.address.city) missingFields.push('Cidade');
+      if (!formData.address.state) missingFields.push('Estado');
+      if (!formData.address.zipcode) missingFields.push('CEP');
 
-      // Converter objeto para JSON e adicionar ao FormData
-      const arenaFormData = { ...formData };
-      formDataToSend.append('data', JSON.stringify(arenaFormData));
-
-      // Adicionar logo se houver
-      if (logoFile) {
-        formDataToSend.append('logo', logoFile);
+      if (missingFields.length > 0) {
+        setError(
+          `Os seguintes campos são obrigatórios: ${missingFields.join(
+            ', '
+          )}. Verifique as outras abas antes de concluir o cadastro.`
+        );
+        setSaving(false);
+        return;
       }
+    } else {
+      try {
+        // Preparar dados para envio
+        const formDataToSend = new FormData();
 
-      // Adicionar fotos
-      photoFiles.forEach((file) => {
-        formDataToSend.append('photos', file);
-      });
+        // Converter objeto para JSON e adicionar ao FormData
+        const arenaFormData = { ...formData };
+        formDataToSend.append('data', JSON.stringify(arenaFormData));
 
-      // Enviar dados para a API
-      await adminService.createArena(formDataToSend);
+        // Adicionar logo se houver
+        if (logoFile) {
+          formDataToSend.append('logo', logoFile);
+        }
 
-      setSuccess('Arena criada com sucesso!');
+        // Adicionar fotos
+        photoFiles.forEach((file) => {
+          formDataToSend.append('photos', file);
+        });
 
-      // Redirecionar após um breve delay
-      setTimeout(() => {
-        navigate('/admin/arenas');
-      }, 2000);
-    } catch (err: any) {
-      console.error('Erro ao criar arena:', err);
-      setError(
-        err.response?.data?.detail || 'Erro ao criar arena. Verifique os dados e tente novamente.'
-      );
-    } finally {
-      setSaving(false);
+        // Enviar dados para a API
+        await adminService.createArena(formDataToSend);
+
+        setSuccess('Arena criada com sucesso!');
+
+        // Redirecionar após um breve delay
+        setTimeout(() => {
+          navigate('/admin/arenas');
+        }, 2000);
+      } catch (err: any) {
+        console.error('Erro ao criar arena:', err);
+        setError(
+          err.response?.data?.detail || 'Erro ao criar arena. Verifique os dados e tente novamente.'
+        );
+      } finally {
+        setSaving(false);
+      }
     }
   };
 

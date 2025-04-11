@@ -279,7 +279,7 @@ async def get_arena_courts(
         )
     
     # Construir filtro
-    filter_query = {"arena_id": arena_id}
+    filter_query = {"arena_id": ObjectId(arena_id)}
     
     if court_type:
         filter_query["type"] = court_type

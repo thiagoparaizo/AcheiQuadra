@@ -1,9 +1,13 @@
 # app/api/routes/admin.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+import json
+import shutil
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Query
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 from pydantic import ValidationError
+from pathlib import Path
+import aiofiles
 
 from app.core.security import get_current_user, get_current_admin_user
 from app.db.database import db
@@ -12,6 +16,7 @@ from app.models.arena import Arena, ArenaCreateWithFiles
 from app.db.init_db import init_db
 from app.models.booking import Booking, BookingStatus, BookingType, BookingWithDetails, PaginatedBookingsResponse
 from app.models.court import Court
+from app.services.maps import geocode_address
 
 router = APIRouter()
 
@@ -216,11 +221,23 @@ async def get_all_arenas(
     current_user = Depends(get_current_admin_user),
     page: int = 1,
     items_per_page: int = 20,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    active_only: bool = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None
 ):
     """Listar todas as arenas (somente admin)"""
     # Construir filtro
     filter_query = {}
+    
+    if active_only is not None:
+        filter_query["active"] = active_only
+    
+    if city:
+        filter_query["address.city"] = {"$regex": city, "$options": "i"}
+        
+    if state:
+        filter_query["address.state"] = {"$regex": state, "$options": "i"}
     
     if search:
         # Buscar por nome ou cidade
@@ -343,13 +360,18 @@ async def get_arena_courts(
 
 @router.post("/admin/arenas/", response_model=Arena)
 async def create_arena(
-    arena_create: ArenaCreateWithFiles,
+    data: str = Form(...),
+    logo: Optional[UploadFile] = File(None),
+    photos: List[UploadFile] = File([]),
     current_user = Depends(get_current_admin_user)
 ):
     """Criar nova arena (somente admin pode criar)"""
     try:
+        # Converter o JSON recebido para um dicionário Python
+        arena_data = json.loads(data)
+        
         # Se não for fornecido um owner_id, usa o ID do usuário atual
-        owner_id = arena_create.owner_id or str(current_user.id)
+        owner_id = arena_data.get("owner_id") or str(current_user.id)
         
         # Verificar se o proprietário existe
         owner_doc = await db.db.users.find_one({"_id": ObjectId(owner_id)})
@@ -360,12 +382,13 @@ async def create_arena(
             )
         
         # Geocodificar endereço para obter coordenadas
-        coordinates = await geocode_address(arena_create.address.dict())
-        if coordinates:
-            arena_create.address.coordinates = coordinates
+        if "address" in arena_data:
+            coordinates = None # TODO ajustar para usar = await geocode_address(arena_data["address"])
+            if coordinates:
+                arena_data["address"]["coordinates"] = coordinates
         
         # Preparar dados para inserção
-        arena_dict = arena_create.dict(exclude={"logo_base64", "photos_base64"})
+        arena_dict = arena_data.copy()
         arena_dict["owner_id"] = owner_id
         arena_dict["created_at"] = datetime.now()
         arena_dict["updated_at"] = datetime.now()
@@ -380,67 +403,59 @@ async def create_arena(
         arena_id = str(result.inserted_id)
         
         # Criar diretório para armazenar arquivos se não existir
-        upload_dir = Path("static/arenas") / arena_id
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Processar logo em base64 se existir
-        if arena_create.logo_base64:
-            # Separar o cabeçalho da base64 (se houver) e obter os dados
-            if "," in arena_create.logo_base64:
-                header, encoded = arena_create.logo_base64.split(",", 1)
-            else:
-                encoded = arena_create.logo_base64
-            
-            # Decodificar base64
-            binary_data = base64.b64decode(encoded)
-            
-            # Determinar extensão com base no tipo MIME ou usar .png como padrão
-            extension = ".png"
-            if "image/jpeg" in arena_create.logo_base64:
-                extension = ".jpg"
-            elif "image/gif" in arena_create.logo_base64:
-                extension = ".gif"
-            
-            # Salvar logo
-            logo_path = upload_dir / f"logo{extension}"
-            with open(logo_path, "wb") as f:
-                f.write(binary_data)
-            
-            # Atualizar URL do logo no banco de dados
-            logo_url = f"/static/arenas/{arena_id}/logo{extension}"
-            await db.db.arenas.update_one(
-                {"_id": ObjectId(arena_id)},
-                {"$set": {"logo_url": logo_url}}
+        try:
+            # Cria o caminho absoluto para garantir que funciona em qualquer ambiente
+            upload_dir = Path("bakend/static") / "arenas" / arena_id
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            print(f"Diretório criado com sucesso em: {upload_dir.absolute()}")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"A arena foi criada, porém, houve uma falha ao criar diretório pra armazenar os arquivos: {str(e)}. Inclúa-os manualmente."
             )
-            arena_dict["logo_url"] = logo_url
         
-        # Processar fotos em base64 se existirem
+        # PROCESSAR LOGO
+        logo_url = None
+        if logo:
+            try:
+                # Gerar nome único para o arquivo
+                logo_ext = Path(logo.filename).suffix.lower()
+                logo_filename = f"logo{logo_ext}"
+                logo_path = upload_dir / logo_filename
+                
+                # Salvar o arquivo
+                async with aiofiles.open(logo_path, "wb") as buffer:
+                    await buffer.write(await logo.read())
+                
+                # Atualizar URL do logo
+                logo_url = f"/ static/arenas/{arena_id}/{logo_filename}"
+                await db.db.arenas.update_one(
+                    {"_id": ObjectId(arena_id)},
+                    {"$set": {"logo_url": logo_url}}
+                )
+            except Exception as e:
+                print(f"Erro ao processar logo: {str(e)}")
+                # Não falha a operação por causa do logo, apenas registra o erro
+        
+        # PROCESSAR FOTOS
         photos_urls = []
-        for i, photo_base64 in enumerate(arena_create.photos_base64):
-            # Separar o cabeçalho da base64 (se houver) e obter os dados
-            if "," in photo_base64:
-                header, encoded = photo_base64.split(",", 1)
-            else:
-                encoded = photo_base64
-            
-            # Decodificar base64
-            binary_data = base64.b64decode(encoded)
-            
-            # Determinar extensão com base no tipo MIME ou usar .png como padrão
-            extension = ".png"
-            if "image/jpeg" in photo_base64:
-                extension = ".jpg"
-            elif "image/gif" in photo_base64:
-                extension = ".gif"
-            
-            # Salvar foto
-            photo_path = upload_dir / f"photo{i}{extension}"
-            with open(photo_path, "wb") as f:
-                f.write(binary_data)
-            
-            # Adicionar URL à lista
-            photo_url = f"/static/arenas/{arena_id}/photo{i}{extension}"
-            photos_urls.append(photo_url)
+        for i, photo in enumerate(photos):
+            try:
+                # Gerar nome único para cada foto
+                photo_ext = Path(photo.filename).suffix.lower()
+                photo_filename = f"photo_{i}{photo_ext}"
+                photo_path = upload_dir / photo_filename
+                
+                # Salvar o arquivo
+                async with aiofiles.open(photo_path, "wb") as buffer:
+                    await buffer.write(await photo.read())
+                
+                # Adicionar URL à lista
+                photo_url = f"/static/arenas/{arena_id}/{photo_filename}"
+                photos_urls.append(photo_url)
+            except Exception as e:
+                print(f"Erro ao processar foto {i}: {str(e)}")
+                # Continua processando as demais fotos
         
         # Atualizar URLs das fotos no banco de dados se houver
         if photos_urls:
@@ -448,13 +463,17 @@ async def create_arena(
                 {"_id": ObjectId(arena_id)},
                 {"$set": {"photos": photos_urls}}
             )
-            arena_dict["photos"] = photos_urls
         
         # Buscar arena atualizada
         arena_doc = await db.db.arenas.find_one({"_id": ObjectId(arena_id)})
         
         return Arena.from_mongo(arena_doc)
     
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dados da arena inválidos (JSON malformado)"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
